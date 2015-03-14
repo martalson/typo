@@ -140,21 +140,26 @@ class Admin::ContentController < Admin::BaseController
   def real_action_for(action); { 'add' => :<<, 'remove' => :delete}[action]; end
 
   def new_or_edit
-    id = params[:id]
-    id = params[:article][:id] if params[:article] && params[:article][:id]
-    @article = Article.get_or_build_article(id)
-    @article.text_filter = current_user.text_filter if current_user.simple_editor?
+    if params[:commit] == "Merge"
+      m = merge(params[:id], params[:merge_with][:id])
+      redirect_to admin_content_path
+    else
+      id = params[:id]
+      id = params[:article][:id] if params[:article] && params[:article][:id]
+      @article = Article.get_or_build_article(id)
+      @article.text_filter = current_user.text_filter if current_user.simple_editor?
 
-    @post_types = PostType.find(:all)
-    if request.post?
-      if params[:article][:draft]
-        get_fresh_or_existing_draft_for_article
-      else
-        if not @article.parent_id.nil?
-          @article = Article.find(@article.parent_id)
+      @post_types = PostType.find(:all)
+      if request.post?
+        if params[:article][:draft]
+          get_fresh_or_existing_draft_for_article
+        else
+          if not @article.parent_id.nil?
+            @article = Article.find(@article.parent_id)
+          end
         end
       end
-    end
+
 
     @article.keywords = Tag.collection_to_string @article.tags
     @article.attributes = params[:article]
@@ -181,6 +186,19 @@ class Admin::ContentController < Admin::BaseController
     @resources = Resource.without_images_by_filename
     @macros = TextFilter.macro_filters
     render 'new'
+    end
+  end
+
+  def merge(id , secid)
+    if not Article.where(:id => secid)
+      return nil
+    else
+      article1 = Article.find(id)
+      article2 = Article.find(secid)
+      article1.update_attributes(:excerpt => article1.excerpt + " " + article2.excerpt)
+      article1.comments << article2.comments
+      article2.destroy
+    end
   end
 
   def set_the_flash
