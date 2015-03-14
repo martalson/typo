@@ -141,7 +141,7 @@ class Admin::ContentController < Admin::BaseController
 
   def new_or_edit
     if params[:commit] == "Merge"
-      m = merge(params[:id], params[:merge_with][:id])
+      m = merge(params[:id], params[:merge_with])
       redirect_to admin_content_path
     else
       id = params[:id]
