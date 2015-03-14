@@ -195,7 +195,8 @@ class Admin::ContentController < Admin::BaseController
     else
       article1 = Article.find(id)
       article2 = Article.find(secid)
-      article1.update_attributes(:excerpt => article1.excerpt + " " + article2.excerpt)
+      article1.update_attributes(:excerpt => article1.excerpt + " " + article2.excerpt) if article2.excerpt
+      article1.update_attributes(:body => article1.body + " " + article2.body) if article2.body 
       article1.comments << article2.comments
       article2.destroy
     end
